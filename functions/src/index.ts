@@ -23,10 +23,6 @@ exports.postContent = functions.https.onRequest(async (req, res) => {
   // 初期化
   admin.initializeApp()
   const fsCollect = admin.firestore().collection('articles')
-  const titleSnap = await fsCollect
-    .where('title', '==', 'first test post')
-    .select('title')
-    .get()
 
   for (const key of Object.keys(req.body)) {
     const fileData = await octokit.request(
@@ -41,6 +37,10 @@ exports.postContent = functions.https.onRequest(async (req, res) => {
       fileData.data.encoding
     ).toString()
     const title = fileText.split(/\r\n|\r|\n/)[1].replace(/title: /g, '')
+    const titleSnap = await fsCollect
+      .where('title', '==', title)
+      .select('title')
+      .get()
 
     // TODO: updateTimeも入れる。
     const flagObj = (() => {
@@ -57,6 +57,7 @@ exports.postContent = functions.https.onRequest(async (req, res) => {
         updateTime: new Date(),
         text: fileText,
       })
+      console.log('success update')
     } else {
       fsCollect
         .add({
